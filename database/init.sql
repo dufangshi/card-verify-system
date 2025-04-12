@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS usage_logs CASCADE;
+DROP TABLE IF EXISTS license_keys CASCADE;
+DROP TABLE IF EXISTS license_types CASCADE;
+DROP TABLE IF EXISTS applications CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+
 -- 角色权限表
 CREATE TABLE roles (
     role_id SERIAL PRIMARY KEY,
@@ -34,7 +41,7 @@ CREATE TABLE license_types (
     type_name VARCHAR(50) NOT NULL,
     deduction_mode VARCHAR(20) CHECK (deduction_mode IN ('time', 'count')), -- 扣费模式
     validity_mode VARCHAR(20) CHECK (validity_mode IN ('fixed', 'activation')), -- 有效期计算方式
-    validity_days INT, -- 有效天数（当deduction_mode=time时使用）
+    validity_duration INTERVAL, -- 有效天数（当deduction_mode=time时使用）
     validity_counts INT, -- 有效次数（当deduction_mode=count时使用）
     max_devices INT DEFAULT 1, -- 允许绑定的最大设备数
     extra_config JSONB DEFAULT '{}' -- 扩展配置
