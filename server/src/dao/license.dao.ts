@@ -1,5 +1,5 @@
 // src/dao/license.dao.ts
-import { pool } from '../config/db';
+import { pool } from "../config/db";
 
 // 定义完整的License类型
 interface LicenseRecord {
@@ -17,7 +17,7 @@ interface LicenseRecord {
   last_used: Date | null;
   is_ban: boolean;
   custom_data: any;
-  validity_mode?: string;  // 从关联表获取的字段
+  validity_mode?: string; // 从关联表获取的字段
   deduction_mode?: string;
 }
 
@@ -42,7 +42,7 @@ export class LicenseDAO {
       created_at: new Date(row.created_at),
       activated_at: row.activated_at ? new Date(row.activated_at) : null,
       expires_at: row.expires_at ? new Date(row.expires_at) : null,
-      last_used: row.last_used ? new Date(row.last_used) : null
+      last_used: row.last_used ? new Date(row.last_used) : null,
     };
   }
 
@@ -60,7 +60,7 @@ export class LicenseDAO {
     `;
     const { rows } = await pool.query(query, [typeId]);
     if (!rows[0]) {
-      throw new Error('License type not found');
+      throw new Error("License type not found");
     }
     return rows[0];
   }
@@ -89,7 +89,7 @@ export class LicenseDAO {
       data.machineCode,
       data.clientIp,
       data.lastUsed.toISOString(), // 明确转换为ISO格式
-      keyId
+      keyId,
     ]);
   }
 
@@ -103,7 +103,7 @@ export class LicenseDAO {
       log.userId || null, // Use null if userId is not provided
       log.eventType,
       log.clientIp,
-      log.machineCode
+      log.machineCode,
     ]);
   }
 
@@ -128,11 +128,83 @@ export class LicenseDAO {
       licenseData.creator_id,
       licenseData.expires_at ? licenseData.expires_at.toISOString() : null,
       licenseData.remaining_uses || null,
-      licenseData.custom_data || {}
+      licenseData.custom_data || {},
     ]);
     if (!rows[0]) {
-      throw new Error('Create license failed');
+      throw new Error("Create license failed");
     }
     return this.mapLicenseRow(rows[0]);
+  }
+
+  // 新增分页查询方法
+  static async getAllKeys(
+    page: number,
+    pageSize: number
+  ): Promise<{
+    items: LicenseRecord[];
+    total: number;
+  }> {
+    const offset = (page - 1) * pageSize;
+    const query = `
+    SELECT *, count(*) OVER() AS total_count 
+    FROM license_keys 
+    ORDER BY created_at DESC
+    LIMIT $1 OFFSET $2
+  `;
+    const { rows } = await pool.query(query, [pageSize, offset]);
+
+    return {
+      items: rows.map(this.mapLicenseRow),
+      total: rows[0] ? Number(rows[0].total_count) : 0,
+    };
+  }
+
+  static async getAllKeysByUser(
+    userId: number,
+    page: number,
+    pageSize: number
+  ): Promise<{
+    items: LicenseRecord[];
+    total: number;
+  }> {
+    const offset = (page - 1) * pageSize;
+    const query = `
+      SELECT *, count(*) OVER() AS total_count 
+      FROM license_keys 
+      WHERE creator_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+    const { rows } = await pool.query(query, [userId, pageSize, offset]);
+
+    return {
+      items: rows.map(this.mapLicenseRow),
+      total: rows[0] ? Number(rows[0].total_count) : 0,
+    };
+  }
+
+  static async deleteLicense(
+    licenseKey: string,
+    userId: number
+  ): Promise<void> {
+    const query = `
+      DELETE FROM license_keys
+      WHERE key_value = $1 AND creator_id = $2
+    `;
+    const result = await pool.query(query, [licenseKey, userId]);
+    if (result.rowCount === 0) {
+      throw new Error("未找到对应卡密或无删除权限");
+    }
+  }
+  static async batchDeleteLicenses(
+    userId: number,
+    licenseKeys: string[]
+  ): Promise<number> {
+    const query = `
+        DELETE FROM license_keys
+        WHERE key_value = ANY($1) AND creator_id = $2
+    `;
+    const result = await pool.query(query, [licenseKeys, userId]);
+    return result.rowCount ?? 0;
   }
 }

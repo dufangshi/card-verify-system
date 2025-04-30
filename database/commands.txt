@@ -1,3 +1,3 @@
 # 进入psql命令行
-psql -h localhost -U card -d carddb -W
+psql -h localhost -U kami_admin -d kami_system -W
 

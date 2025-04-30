@@ -2,6 +2,8 @@
 import express from 'express';
 import cors from 'cors';
 import { licenseRouter } from './routes/license.route';
+import userRouter from './routes/user.routes';
+
 import { errorHandler } from './middleware/errorHandler';
 import { ENV } from './config/env';
 
@@ -11,12 +13,13 @@ const app = express();
 app.use(cors({
     origin: '*',  // 允许所有来源
     methods: ['GET', 'POST'],  // 允许的 HTTP 方法
-    allowedHeaders: ['Content-Type']  // 允许的请求头
+    allowedHeaders: ['Content-Type','Authorization']  // 允许的请求头
   }));
 app.use(express.json());
 
 // 路由
 app.use('/api/licenses', licenseRouter);
+app.use('/api/user', userRouter);
 
 // 错误处理
 app.use(errorHandler);
