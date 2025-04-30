@@ -29,7 +29,7 @@ export class UserService {
         roleId: user.role_id,
       },
       ENV.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "30m" }
     );
 
     // 返回用户信息和 Token

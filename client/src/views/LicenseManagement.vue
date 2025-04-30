@@ -97,51 +97,40 @@
                     <el-input :value="currentLicense.licenseKey" disabled />
                 </el-form-item>
 
-                <el-form-item label="归属程序" v-if="isCreateMode">
-                    <el-radio-group v-model="currentLicense.appId">
-                        <el-radio :label="1">程序A</el-radio>
-                        <el-radio :label="2">程序B</el-radio>
+                <el-form-item label="归属程序">
+                    <el-radio-group v-model="currentLicense.appId" id="appId">
+                        <el-radio :value="1">程序A</el-radio>
+                        <el-radio :value="2">程序B</el-radio>
                     </el-radio-group>
                 </el-form-item>
-                <el-form-item label="归属程序" v-else>
-                    <el-input :value="currentLicense.program" disabled />
-                </el-form-item>
 
-                <el-form-item label="卡密时效" v-if="isCreateMode">
-                    <el-radio-group v-model="currentLicense.typeId">
-                        <el-radio :label="0">天卡</el-radio>
-                        <el-radio :label="1">周卡</el-radio>
-                        <el-radio :label="2">月卡</el-radio>
-                        <el-radio :label="3">年卡</el-radio>
-                        <el-radio :label="4">永久卡</el-radio>
+                <el-form-item label="卡密时效">
+                    <el-radio-group v-model="currentLicense.typeId" id="typeId">
+                        <el-radio :value="0">天卡</el-radio>
+                        <el-radio :value="1">周卡</el-radio>
+                        <el-radio :value="2">月卡</el-radio>
+                        <el-radio :value="3">年卡</el-radio>
+                        <el-radio :value="4">永久卡</el-radio>
                     </el-radio-group>
                 </el-form-item>
-                <el-form-item label="卡密分类" v-else>
-                    <el-input :value="currentLicense.category" disabled />
+
+                <el-form-item label="生成数量">
+                    <el-input-number v-model="currentLicense.quantity" :min="1" id="quantity" />
                 </el-form-item>
 
-
-                <el-form-item label="生成数量" v-if="isCreateMode">
-                    <el-input-number v-model="currentLicense.quantity" :min="1" />
-                </el-form-item>
-
-                <el-form-item label="卡密前缀" v-if="isCreateMode">
-                    <el-input v-model="currentLicense.pattern" placeholder="可选，留空则随机生成" />
+                <el-form-item label="卡密前缀">
+                    <el-input v-model="currentLicense.pattern" placeholder="可选，留空则随机生成" id="pattern" />
                 </el-form-item>
 
                 <el-form-item label="卡密备注">
-                    <el-input v-model="currentLicense.customData" placeholder="请输入备注信息" />
+                    <el-input v-model="currentLicense.customData.info" placeholder="请输入备注信息" id="customDataInfo" />
                 </el-form-item>
 
                 <el-form-item label="状态" v-if="!isCreateMode">
                     <el-radio-group v-model="currentLicense.status">
-                        <el-radio :label="false">正常</el-radio>
-                        <el-radio :label="true">封禁</el-radio>
+                        <el-radio :value="false">正常</el-radio>
+                        <el-radio :value="true">封禁</el-radio>
                     </el-radio-group>
-                </el-form-item>
-
-                <el-form-item label="设备码" v-if="!isCreateMode">
-                    <el-input v-model="currentLicense.deviceCode" placeholder="留空则解绑" />
                 </el-form-item>
 
 
@@ -178,6 +167,8 @@ interface License {
     online: boolean; // 是否在线
     status: boolean; // 状态：false-正常, true-封禁
     deviceCode: string | null; // 设备码
+
+
     createdAt: string; // 创建时间 (从 API 获取)
     customData: { info?: string }; // 自定义数据/备注
 
@@ -265,6 +256,7 @@ const apiService = {
                 quantity: data.quantity,
                 customData: { info: data.customData?.info || '' },
             };
+            console.log('创建卡密请求数据:', payload); // 调试输出
             const response = await axios.post(`${API_BASE_URL}/create`, payload, {
                 headers: apiService.getAuthHeaders(),
             });
@@ -680,11 +672,6 @@ onMounted(() => {
 /* 微调对话框内元素间距 */
 .el-form-item {
     margin-bottom: 18px;
-}
-
-.el-radio-group {
-    margin-top: 5px;
-    /* 给单选按钮组一点上边距 */
 }
 
 .el-radio {
